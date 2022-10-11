@@ -36,5 +36,5 @@ for i, x in enumerate(X):
 X = np.array(X)
 y = np.array(y)
 
-np.save('data/ravdess_X.npy', X)
-np.save('data/ravdess_y.npy', y)
+np.save('data/X_ravdess.npy', X)
+np.save('data/y_ravdess.npy', y)

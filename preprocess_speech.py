@@ -40,5 +40,5 @@ for i, x in enumerate(X):
 X = np.array(X)
 y = np.array(y)
 
-np.save('data/speech_X.npy', X)
-np.save('data/speech_y.npy', y)
+np.save('data/X_speech.npy', X)
+np.save('data/y_speech.npy', y)
