@@ -21,12 +21,12 @@ waveform_length = len(X[0])
 # Determine output size
 num_classes = len(classes)
 
-# Standardise data
+# Standardize data
 X -= np.mean(X)
 X /= np.std(X)
 
 # Shuffle and separate data into train, validation and test data
-stratified_k_fold = StratifiedKFold(n_splits=5, shuffle=True, random_state=64)
+stratified_k_fold = StratifiedKFold(n_splits=4, shuffle=True, random_state=64)
 
 for split_index, (train_indexes, test_indexes) in enumerate(stratified_k_fold.split(X, y)):
     # Seperate data into train and test data
@@ -45,7 +45,7 @@ for split_index, (train_indexes, test_indexes) in enumerate(stratified_k_fold.sp
     model = Models.magnet(waveform_length, num_classes)
 
     model.compile(
-        optimizer=Adam(learning_rate=0.01),
+        optimizer=Adam(learning_rate=0.001),
         loss=categorical_crossentropy,
         metrics=['accuracy']
     )
@@ -60,9 +60,9 @@ for split_index, (train_indexes, test_indexes) in enumerate(stratified_k_fold.sp
         x=X_train,
         y=y_train,
         validation_data=(X_validation, y_validation),
-        epochs=250,
+        epochs=128,
         callbacks=[
-            EarlyStopping(monitor='val_loss', patience=10)
+            EarlyStopping(monitor='val_loss', patience=8, restore_best_weights=True)
         ]
     )
     
@@ -74,9 +74,8 @@ for split_index, (train_indexes, test_indexes) in enumerate(stratified_k_fold.sp
     # Predict using test data
     predictions = model.predict(x=X_test)
     
-    # Save predictions
-    with open(f'models/predictions/ravdess_{split_index}.csv', 'w', newline='') as f:
-        writer = csv.writer(f)
-        for i, prediction in enumerate(predictions):
-            writer.writerow([y_test[i], prediction])
-    
+    # Save truths and predictions
+    with open(f'models/predictions/ravdess_{split_index}_truths.npy', 'wb') as f:
+        np.save(f, y_test)
+    with open(f'models/predictions/ravdess_{split_index}_predictions.npy', 'wb') as f:
+        np.save(f, predictions)

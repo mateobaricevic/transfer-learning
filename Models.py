@@ -1,5 +1,5 @@
 from keras.layers import (LSTM, Activation, Bidirectional, Conv1D, Dense,
-                          Dropout, Input, MaxPooling1D)
+                          Dropout, Flatten, Input, MaxPooling1D)
 from keras.models import Model
 
 
@@ -13,14 +13,22 @@ def magnet(waveform_length, num_classes):
     e = Dropout(0.2)(e, training=True)
     e = MaxPooling1D(4, padding='same')(e)
      
-    e = Conv1D(32, 3, padding = 'same', name='conv1d_1')(e)
+    e = Conv1D(64, 3, padding = 'same', name='conv1d_1')(e)
+    e = Dropout(0.2)(e, training=True)
+    e = MaxPooling1D(4, padding='same')(e)
+     
+    e = Conv1D(64, 3, padding = 'same', name='conv1d_2')(e)
+    e = Dropout(0.2)(e, training=True)
+    e = MaxPooling1D(4, padding='same')(e)
+     
+    e = Conv1D(64, 3, padding = 'same', name='conv1d_3')(e)
     e = Dropout(0.2)(e, training=True)
     e = MaxPooling1D(4, padding='same')(e)
 
-    e = Bidirectional(LSTM(100, return_sequences=False))(e)
+    e = Bidirectional(LSTM(32, return_sequences=True))(e)
+    e = Flatten()(e)
     e = Dense(num_classes)(e)
 
     o = Activation('softmax', name='output_layer')(e)
     
-    model = Model(inputs=[waveform_input], outputs=o)
-    return model
+    return Model(inputs=[waveform_input], outputs=o)
