@@ -32,6 +32,9 @@ for i in range(4):
     print(f'Loading pretrained model {i} of {args.source_dataset}...')
     pretrained_model = keras.models.load_model(f'models/{args.source_dataset}/model_{i}.h5')
 
+    if pretrained_model is None:
+        raise Exception('Failed to load pretrained model!')
+
     # Print pretrained model summary
     if i == 0:
         print('-' * 8 + ' Source model ' + '-' * 8)
