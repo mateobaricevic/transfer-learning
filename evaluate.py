@@ -15,7 +15,7 @@ for i in range(4):
         truths = np.load(f)
     with open(f'models/{args.dataset}/predictions/model_{i}_predictions.npy', 'rb') as f:
         predictions = np.load(f)
-    
+
     truths_indexes = [np.argmax(truth) for truth in truths]
     predictions_indexes = [np.argmax(prediction) for prediction in predictions]
 
@@ -25,7 +25,7 @@ for i in range(4):
     mccs.append(mcc)
     roc_auc = roc_auc_score(truths, predictions, average='weighted')
     roc_aucs.append(roc_auc)
-    
+
     print('-' * 8 + f' Model {i} ' + '-' * 8)
     print(f'F1 score: {f1}')
     print(f'Matthews correlation coefficient: {mcc}')

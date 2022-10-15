@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('dataset', help='Which dataset to train?')
 args = parser.parse_args()
 
-# Open numpy data
+# Load data
 print('Loading data...')
 classes = np.load(f'data/{args.dataset}/classes.npy')
 X = np.load(f'data/{args.dataset}/X.npy')
@@ -29,11 +29,11 @@ num_classes = len(classes)
 X -= np.mean(X)
 X /= np.std(X)
 
-# Shuffle and separate data into train, validation and test data
+# Split data into train and test stratified data and use KFold cross-validation
 stratified_k_fold = StratifiedKFold(n_splits=4, shuffle=True, random_state=64)
 
 for split_index, (train_indexes, test_indexes) in enumerate(stratified_k_fold.split(X, y)):
-    # Seperate data into train and test data
+    # Get train and test data
     X_train, X_test = X[train_indexes], X[test_indexes]
     y_train, y_test = y[train_indexes], y[test_indexes]
 
@@ -48,11 +48,7 @@ for split_index, (train_indexes, test_indexes) in enumerate(stratified_k_fold.sp
     # Get and compile model
     model = Models.magnet(waveform_length, num_classes)
 
-    model.compile(
-        optimizer=Adam(learning_rate=0.001),
-        loss=categorical_crossentropy,
-        metrics=['accuracy']
-    )
+    model.compile(optimizer=Adam(learning_rate=0.001), loss=categorical_crossentropy, metrics=['accuracy'])
 
     # Print model summary
     if split_index == 0:
@@ -65,15 +61,13 @@ for split_index, (train_indexes, test_indexes) in enumerate(stratified_k_fold.sp
         y=y_train,
         validation_data=(X_validation, y_validation),
         epochs=128,
-        callbacks=[
-            EarlyStopping(monitor='val_loss', patience=8, restore_best_weights=True)
-        ]
+        callbacks=[EarlyStopping(monitor='val_loss', patience=8, restore_best_weights=True)],
     )
-    
+
     # Predict using test data
     print('Predicting using test data...')
     predictions = model.predict(x=X_test)
-    
+
     # Save model, training history, truths and predictions
     print('Saving model, history, truths and predictions...')
     model.save(f'models/{args.dataset}/model_{split_index}.h5')
