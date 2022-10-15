@@ -1,4 +1,4 @@
-import csv
+import argparse
 import pickle
 
 import numpy as np
@@ -9,11 +9,15 @@ from sklearn.model_selection import StratifiedKFold, train_test_split
 
 import Models
 
-classes = ['neutral', 'calm', 'happy', 'sad', 'angry', 'fearful', 'disgust', 'surprised']
+parser = argparse.ArgumentParser()
+parser.add_argument('dataset', help='Which dataset to train?')
+args = parser.parse_args()
 
 # Open numpy data
-X = np.load('data/X_ravdess.npy')
-y = np.load('data/y_ravdess.npy')
+print('Loading data...')
+classes = np.load(f'data/{args.dataset}/classes.npy')
+X = np.load(f'data/{args.dataset}/X.npy')
+y = np.load(f'data/{args.dataset}/y.npy')
 
 # Determine input size
 waveform_length = len(X[0])
@@ -55,7 +59,7 @@ for split_index, (train_indexes, test_indexes) in enumerate(stratified_k_fold.sp
         print(model.summary())
 
     # Fit model
-    print(f'Fitting model {split_index}...')
+    print(f'Fitting model_{split_index}...')
     history = model.fit(
         x=X_train,
         y=y_train,
@@ -66,16 +70,18 @@ for split_index, (train_indexes, test_indexes) in enumerate(stratified_k_fold.sp
         ]
     )
     
-    # Save model and training history
-    with open(f'models/ravdess_{split_index}.history', 'wb') as f:
-        pickle.dump(history.history, f)
-    model.save(f'models/ravdess_{split_index}.h5')
-    
     # Predict using test data
+    print('Predicting using test data...')
     predictions = model.predict(x=X_test)
     
-    # Save truths and predictions
-    with open(f'models/predictions/ravdess_{split_index}_truths.npy', 'wb') as f:
+    # Save model, training history, truths and predictions
+    print('Saving model, history, truths and predictions...')
+    model.save(f'models/{args.dataset}/model_{split_index}.h5')
+    with open(f'models/{args.dataset}/model_{split_index}.history', 'wb') as f:
+        pickle.dump(history.history, f)
+    with open(f'models/{args.dataset}/predictions/model_{split_index}_truths.npy', 'wb') as f:
         np.save(f, y_test)
-    with open(f'models/predictions/ravdess_{split_index}_predictions.npy', 'wb') as f:
+    with open(f'models/{args.dataset}/predictions/model_{split_index}_predictions.npy', 'wb') as f:
         np.save(f, predictions)
+
+print('Done.')

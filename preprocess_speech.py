@@ -9,23 +9,24 @@ classes = [
     'no', 'off', 'on', 'one', 'right', 'seven', 'sheila', 'six', 'stop', 'three', 
     'tree', 'two', 'up', 'visual', 'wow', 'yes', 'zero'
 ]
-
 X = []
 y = []
 
 # Load all audio files and determine the length of the longest recording
 max_len = 0
 for index, c in enumerate(classes):
-    print(c)
+    print(f'Processing data for class {c}...')
     files = os.listdir(f'datasets/speech/{c}/')
     for f in files:
         data, samplerate = librosa.load(f'datasets/speech/{c}/{f}', sr=8000)
         X.append(data)
         y.append(index)
         max_len = max(len(data), max_len)
-print(f'Max length: {max_len}')
+
+print(f'Max waveform length: {max_len}')
 
 # Load background noise and pad all recordings to the length of the longest recording
+print('Padding data with white noise...')
 white_noise, samplerate = librosa.load('datasets/speech/_background_noise_/white_noise.wav', sr=8000)
 white_noise_i = 0
 for i, x in enumerate(X):
@@ -37,8 +38,14 @@ for i, x in enumerate(X):
     X[i] = x
 
 # Convert to numpy arrays
+classes = np.array(classes)
 X = np.array(X)
 y = np.array(y)
 
-np.save('data/X_speech.npy', X)
-np.save('data/y_speech.npy', y)
+# Save data
+print('Saving data...')
+np.save('data/speech/classes.npy', classes)
+np.save('data/speech/X.npy', X)
+np.save('data/speech/y.npy', y)
+
+print('Done.')
