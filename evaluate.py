@@ -4,16 +4,21 @@ import numpy as np
 from sklearn.metrics import f1_score, matthews_corrcoef, roc_auc_score
 
 parser = argparse.ArgumentParser()
-parser.add_argument('dataset', help='Which dataset models to evaluate?')
+parser.add_argument('target_dataset', help='Which dataset was used for training?')
+parser.add_argument('source_dataset', help='Which dataset was knowledge transfered from?', nargs='?', default=None)
 args = parser.parse_args()
+
+source_dataset = ''
+if args.source_dataset:
+    source_dataset = '/' + args.source_dataset
 
 f1s = []
 mccs = []
 roc_aucs = []
 for i in range(4):
-    with open(f'models/{args.dataset}/predictions/model_{i}_truths.npy', 'rb') as f:
+    with open(f'models/{args.target_dataset}{source_dataset}/predictions/model_{i}_truths.npy', 'rb') as f:
         truths = np.load(f)
-    with open(f'models/{args.dataset}/predictions/model_{i}_predictions.npy', 'rb') as f:
+    with open(f'models/{args.target_dataset}{source_dataset}/predictions/model_{i}_predictions.npy', 'rb') as f:
         predictions = np.load(f)
 
     truths_indexes = [np.argmax(truth) for truth in truths]

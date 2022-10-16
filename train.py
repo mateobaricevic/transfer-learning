@@ -13,7 +13,7 @@ import Models
 
 parser = argparse.ArgumentParser()
 parser.add_argument('target_dataset', help='Which dataset to train?')
-parser.add_argument('source_dataset', help='Which dataset to transfer knowledge from?', nargs='?', default='')
+parser.add_argument('source_dataset', help='Which dataset to transfer knowledge from?', nargs='?', default=None)
 args = parser.parse_args()
 
 # Load data
