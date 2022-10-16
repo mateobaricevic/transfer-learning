@@ -29,10 +29,10 @@ for i in range(4):
     print('-' * 8 + f' Model {i} ' + '-' * 8)
     print(f'F1 score: {f1}')
     print(f'Matthews correlation coefficient: {mcc}')
-    print(f'Area Under the Receiver Operating Characteristic Curve score: {roc_auc}')
+    print(f'ROC AUC score: {roc_auc}')
 
 print()
 print('-' * 8 + f' Average Scores ' + '-' * 8)
 print(f'F1 score: {np.average(f1s)}')
 print(f'Matthews correlation coefficient: {np.average(mccs)}')
-print(f'Area Under the Receiver Operating Characteristic Curve score: {np.average(roc_aucs)}')
+print(f'ROC AUC score: {np.average(roc_aucs)}')
