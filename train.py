@@ -14,7 +14,12 @@ import Models
 parser = argparse.ArgumentParser()
 parser.add_argument('target_dataset', help='Which dataset to train?')
 parser.add_argument('source_dataset', help='Which dataset to transfer knowledge from?', nargs='?', default=None)
+parser.add_argument('n_layers', help='How many layers of weights to transfer?', nargs='?', default=None)
 args = parser.parse_args()
+
+if args.source_dataset:
+    if not args.n_layers:
+        parser.error('when providing source_dataset argument the following arguments are also required: n_layers')
 
 # Load data
 print('Loading data...')
@@ -65,7 +70,8 @@ for n_fold, (train_indexes, test_indexes) in enumerate(stratified_k_fold.split(X
             print(pretrained_model.summary())
 
         # Transfer knowledge
-        for j in [1, 4]:
+        layers = [1, 4, 7, 10, 13]
+        for j in layers[:int(args.n_layers)]:
             model.layers[j].set_weights(pretrained_model.layers[j].get_weights())
             model.layers[j].trainable = False
 
