@@ -73,6 +73,9 @@ classes = np.array(classes)
 X = np.array(X)
 y = np.array(y)
 
+# Make directories if they don't exist
+os.makedirs(f'data/speech', exist_ok=True)
+
 # Save data
 print('Saving data...')
 np.save('data/speech/classes.npy', classes)

@@ -1,0 +1,2 @@
+python preprocess_ravdess.py
+python preprocess_speech.py

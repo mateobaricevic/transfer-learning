@@ -1,6 +1,7 @@
 import argparse
+import os
 import pickle
-import time
+from datetime import datetime
 
 import numpy as np
 from keras.callbacks import EarlyStopping
@@ -14,12 +15,17 @@ import Models
 parser = argparse.ArgumentParser()
 parser.add_argument('target_dataset', help='Which dataset to train?')
 parser.add_argument('source_dataset', help='Which dataset to transfer knowledge from?', nargs='?', default=None)
-parser.add_argument('n_layers', help='How many layers of weights to transfer?', nargs='?', default=None)
+parser.add_argument('n_layers', help='How many layers of weights to transfer?', nargs='?', type=int, default=None)
 args = parser.parse_args()
 
+# Indexes of layers that can be used to transfer knowledge from
+layers = [1, 4, 7, 10, 13]
+
 if args.source_dataset:
-    if not args.n_layers:
+    if args.n_layers is None:
         parser.error('when providing source_dataset argument the following arguments are also required: n_layers')
+    if args.n_layers < 1 or args.n_layers > len(layers):
+        parser.error(f'argument n_layers: invalid value (needs to be from range [1, {len(layers)}])')
 
 # Load data
 print('Loading data...')
@@ -70,8 +76,7 @@ for n_fold, (train_indexes, test_indexes) in enumerate(stratified_k_fold.split(X
             print(pretrained_model.summary())
 
         # Transfer knowledge
-        layers = [1, 4, 7, 10, 13]
-        for j in layers[:int(args.n_layers)]:
+        for j in layers[:args.n_layers]:
             model.layers[j].set_weights(pretrained_model.layers[j].get_weights())
             model.layers[j].trainable = False
 
@@ -85,7 +90,7 @@ for n_fold, (train_indexes, test_indexes) in enumerate(stratified_k_fold.split(X
 
     # Fit model
     print(f'Fitting model_{n_fold} to {args.target_dataset}...')
-    start_time = time.time()
+    start_time = datetime.now()
     history = model.fit(
         x=X_train,
         y=y_train,
@@ -93,24 +98,50 @@ for n_fold, (train_indexes, test_indexes) in enumerate(stratified_k_fold.split(X
         epochs=128,
         callbacks=[EarlyStopping(monitor='val_loss', patience=8, restore_best_weights=True)],
     )
-    print(f'Training took {(time.time() - start_time):.2f} second(s).')
+    print(f'Training took {datetime.now() - start_time}')
+
+    path = f'models/{args.target_dataset}'
+    if args.source_dataset:
+        path += f'/{args.source_dataset}_{args.n_layers}'
+    
+    # Make directories if they don't exist
+    os.makedirs(f'{path}/predictions', exist_ok=True)
+
+    # Save training history
+    print('Saving training history...')
+    with open(f'{path}/model_{n_fold}.history', 'wb') as f:
+        pickle.dump(history.history, f)
+
+    if args.source_dataset:
+        # Finetune model
+        print(f'Finetuning model_{n_fold}...')
+        model.trainable = True
+        model.compile(optimizer=Adam(learning_rate=0.0001), loss=categorical_crossentropy, metrics=['accuracy'])
+        start_time = datetime.now()
+        history_finetune = model.fit(
+            x=X_train,
+            y=y_train,
+            validation_data=(X_validation, y_validation),
+            epochs=128,
+            callbacks=[EarlyStopping(monitor='val_loss', patience=8, restore_best_weights=True)],
+        )
+        print(f'Finetuning took {datetime.now() - start_time}')
+
+        # Save finetuning history
+        print('Saving finetuning history...')
+        with open(f'{path}/model_{n_fold}_finetune.history', 'wb') as f:
+            pickle.dump(history_finetune.history, f)
 
     # Predict using test data
     print('Predicting using test data...')
     predictions = model.predict(x=X_test)
 
-    source_dataset = ''
-    if args.source_dataset:
-        source_dataset = '/' + args.source_dataset
-
-    # Save model, training history, truths and predictions
-    print('Saving model, history, truths and predictions...')
-    model.save(f'models/{args.target_dataset}{source_dataset}/model_{n_fold}.h5')
-    with open(f'models/{args.target_dataset}{source_dataset}/model_{n_fold}.history', 'wb') as f:
-        pickle.dump(history.history, f)
-    with open(f'models/{args.target_dataset}{source_dataset}/predictions/model_{n_fold}_truths.npy', 'wb') as f:
+    # Save model, truths and predictions
+    print('Saving model, truths and predictions...')
+    model.save(f'{path}/model_{n_fold}.h5')
+    with open(f'{path}/predictions/model_{n_fold}_truths.npy', 'wb') as f:
         np.save(f, y_test)
-    with open(f'models/{args.target_dataset}{source_dataset}/predictions/model_{n_fold}_predictions.npy', 'wb') as f:
+    with open(f'{path}/predictions/model_{n_fold}_predictions.npy', 'wb') as f:
         np.save(f, predictions)
 
 print('Done.')
