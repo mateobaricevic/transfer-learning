@@ -15,7 +15,8 @@ import Models
 parser = argparse.ArgumentParser()
 parser.add_argument('target_dataset', help='Which dataset to train?')
 parser.add_argument('source_dataset', help='Which dataset to transfer knowledge from?', nargs='?', default=None)
-parser.add_argument('n_layers', help='How many layers of weights to transfer?', nargs='?', type=int, default=None)
+parser.add_argument('n_layers', help='How many layers of weights to transfer?', nargs='?', default=None, type=int)
+parser.add_argument('-f', '--finetune', help='Finetune the model?', action='store_true')
 args = parser.parse_args()
 
 # Indexes of layers that can be used to transfer knowledge from
@@ -112,7 +113,7 @@ for n_fold, (train_indexes, test_indexes) in enumerate(stratified_k_fold.split(X
     with open(f'{path}/model_{n_fold}.history', 'wb') as f:
         pickle.dump(history.history, f)
 
-    if args.source_dataset:
+    if args.source_dataset and args.finetune:
         # Finetune model
         print(f'Finetuning model_{n_fold}...')
         model.trainable = True
