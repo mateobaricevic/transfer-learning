@@ -23,7 +23,12 @@ path = f'models/{args.target_dataset}'
 if args.source_dataset:
     path += f'/{args.source_dataset}_{args.n_layers}'
 
+if_source_dataset = ''
+if args.source_dataset:
+    if_source_dataset = f' using {args.n_layers} layer(s) of knowledge from {args.source_dataset} models'
+
 # Vizualize models
+print(f'Visualizing {args.target_dataset} models{if_source_dataset}...')
 for i in range(4):
     # Load training history
     with open(f'{path}/model_{i}.history', 'rb') as f:
