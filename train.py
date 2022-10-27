@@ -44,6 +44,11 @@ num_classes = len(classes)
 X -= np.mean(X)
 X /= np.std(X)
 
+# Get path
+path = f'results/{args.target_dataset}'
+if args.source_dataset:
+    path += f'/{args.source_dataset}/{args.n_layers}_layers'
+    
 # Split data into train and test stratified data and use KFold cross-validation
 stratified_k_fold = StratifiedKFold(n_splits=4, shuffle=True, random_state=64)
 
@@ -66,10 +71,10 @@ for n_fold, (train_indexes, test_indexes) in enumerate(stratified_k_fold.split(X
     if args.source_dataset:
         # Load pretrained model
         print(f'Loading pretrained model_{n_fold} of {args.source_dataset}...')
-        pretrained_model = load_model(f'models/{args.source_dataset}/model_{n_fold}.h5')
+        pretrained_model = load_model(f'{path}/model_{n_fold}/model.h5')
 
         if pretrained_model is None:
-            raise Exception(f'Pretrained model of {args.source_dataset} not found!')
+            raise Exception(f'Pretrained model_{n_fold} of {args.source_dataset} not found!')
 
         # Print pretrained model summary
         if n_fold == 0:
@@ -100,17 +105,13 @@ for n_fold, (train_indexes, test_indexes) in enumerate(stratified_k_fold.split(X
         callbacks=[EarlyStopping(monitor='val_loss', patience=8, restore_best_weights=True)],
     )
     print(f'Training took {datetime.now() - start_time}')
-
-    path = f'models/{args.target_dataset}'
-    if args.source_dataset:
-        path += f'/{args.source_dataset}_{args.n_layers}'
     
-    # Make directories if they don't exist
-    os.makedirs(f'{path}/predictions', exist_ok=True)
+    # Make directory if it doesn't exist
+    os.makedirs(f'{path}/model_{n_fold}', exist_ok=True)
 
     # Save training history
     print('Saving training history...')
-    with open(f'{path}/model_{n_fold}.history', 'wb') as f:
+    with open(f'{path}/model_{n_fold}/train.history', 'wb') as f:
         pickle.dump(history.history, f)
 
     if args.source_dataset and args.finetune:
@@ -119,7 +120,7 @@ for n_fold, (train_indexes, test_indexes) in enumerate(stratified_k_fold.split(X
         model.trainable = True
         model.compile(optimizer=Adam(learning_rate=0.0001), loss=categorical_crossentropy, metrics=['accuracy'])
         start_time = datetime.now()
-        history_finetune = model.fit(
+        history = model.fit(
             x=X_train,
             y=y_train,
             validation_data=(X_validation, y_validation),
@@ -130,8 +131,8 @@ for n_fold, (train_indexes, test_indexes) in enumerate(stratified_k_fold.split(X
 
         # Save finetuning history
         print('Saving finetuning history...')
-        with open(f'{path}/model_{n_fold}_finetune.history', 'wb') as f:
-            pickle.dump(history_finetune.history, f)
+        with open(f'{path}/model_{n_fold}/finetune.history', 'wb') as f:
+            pickle.dump(history.history, f)
 
     # Predict using test data
     print('Predicting using test data...')
@@ -139,10 +140,10 @@ for n_fold, (train_indexes, test_indexes) in enumerate(stratified_k_fold.split(X
 
     # Save model, truths and predictions
     print('Saving model, truths and predictions...')
-    model.save(f'{path}/model_{n_fold}.h5')
-    with open(f'{path}/predictions/model_{n_fold}_truths.npy', 'wb') as f:
+    model.save(f'{path}/model_{n_fold}/model.h5')
+    with open(f'{path}/model_{n_fold}/truths.npy', 'wb') as f:
         np.save(f, y_test)
-    with open(f'{path}/predictions/model_{n_fold}_predictions.npy', 'wb') as f:
+    with open(f'{path}/model_{n_fold}/predictions.npy', 'wb') as f:
         np.save(f, predictions)
 
 print('Done.')

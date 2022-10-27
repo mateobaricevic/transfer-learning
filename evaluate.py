@@ -19,19 +19,19 @@ if args.source_dataset:
         parser.error(f'argument n_layers: invalid value (needs to be from range [1, {len(layers)}])')
 
 # Get path
-path = f'models/{args.target_dataset}'
+path = f'results/{args.target_dataset}'
 if args.source_dataset:
-    path += f'/{args.source_dataset}_{args.n_layers}'
+    path += f'/{args.source_dataset}/{args.n_layers}_layers'
 
 # Evaluate models
 f1s = []
 mccs = []
 roc_aucs = []
-for i in range(4):
+for n_fold in range(4):
     # Load truths and predictions
-    with open(f'{path}/predictions/model_{i}_truths.npy', 'rb') as f:
+    with open(f'{path}/model_{n_fold}/truths.npy', 'rb') as f:
         truths = np.load(f)
-    with open(f'{path}/predictions/model_{i}_predictions.npy', 'rb') as f:
+    with open(f'{path}/model_{n_fold}/predictions.npy', 'rb') as f:
         predictions = np.load(f)
 
     truths_indexes = [np.argmax(truth) for truth in truths]
@@ -50,7 +50,7 @@ for i in range(4):
     roc_aucs.append(roc_auc)
 
     # Print scores
-    print('-' * 8 + f' Model {i} ' + '-' * 8)
+    print('-' * 8 + f' Model {n_fold} ' + '-' * 8)
     print(f'F1 score: {f1}')
     print(f'Matthews correlation coefficient: {mcc}')
     print(f'ROC AUC score: {roc_auc}')

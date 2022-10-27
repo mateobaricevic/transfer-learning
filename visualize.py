@@ -1,4 +1,5 @@
 import argparse
+import os
 import pickle
 
 from matplotlib import pyplot as plt
@@ -19,9 +20,9 @@ if args.source_dataset:
         parser.error(f'argument n_layers: invalid value (needs to be from range [1, {len(layers)}])')
 
 # Get path
-path = f'models/{args.target_dataset}'
+path = f'results/{args.target_dataset}'
 if args.source_dataset:
-    path += f'/{args.source_dataset}_{args.n_layers}'
+    path += f'/{args.source_dataset}/{args.n_layers}_layers'
 
 if_source_dataset = ''
 if args.source_dataset:
@@ -31,32 +32,32 @@ if args.source_dataset:
 print(f'Visualizing {args.target_dataset} models{if_source_dataset}...')
 for i in range(4):
     # Load training history
-    with open(f'{path}/model_{i}.history', 'rb') as f:
-        history = pickle.load(f)
+    with open(f'{path}/model_{i}/train.history', 'rb') as f:
+        train_history = pickle.load(f)
 
     # Get training accuracies
-    accuracy = history['accuracy'][:-8]
-    val_accuracy = history['val_accuracy'][:-8]
+    accuracy = train_history['accuracy'][:-8]
+    val_accuracy = train_history['val_accuracy'][:-8]
 
     # Get training losses
-    loss = history['loss'][:-8]
-    val_loss = history['val_loss'][:-8]
+    loss = train_history['loss'][:-8]
+    val_loss = train_history['val_loss'][:-8]
 
     # Save number of epochs before finetuning
     n_epochs = len(loss)
 
     if args.source_dataset:
         # Load finetuning history
-        with open(f'{path}/model_{i}_finetune.history', 'rb') as f:
-            ft_history = pickle.load(f)
+        with open(f'{path}/model_{i}/finetune.history', 'rb') as f:
+            finetune_history = pickle.load(f)
 
             # Append finetuning accuracies
-            accuracy += ft_history['accuracy'][:-8]
-            val_accuracy += ft_history['val_accuracy'][:-8]
+            accuracy += finetune_history['accuracy'][:-8]
+            val_accuracy += finetune_history['val_accuracy'][:-8]
 
             # Append finetuning losses
-            loss += ft_history['loss'][:-8]
-            val_loss += ft_history['val_loss'][:-8]
+            loss += finetune_history['loss'][:-8]
+            val_loss += finetune_history['val_loss'][:-8]
 
     # Get epochs
     epochs = range(1, len(loss) + 1)
@@ -92,6 +93,6 @@ for i in range(4):
 
     # Save figure
     print(f'Saving figure for model_{i}...')
-    figure.savefig(f'{path}/model_{i}.png')
+    figure.savefig(f'{path}/model_{i}/visualization.png')
 
 print('Done.')
