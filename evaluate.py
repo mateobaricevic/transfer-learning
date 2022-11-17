@@ -61,3 +61,10 @@ print('-' * 8 + f' Average Scores ' + '-' * 8)
 print(f'F1 score: {np.average(f1s)}')
 print(f'Matthews correlation coefficient: {np.average(mccs)}')
 print(f'ROC AUC score: {np.average(roc_aucs)}')
+
+# Print standard deviations
+print()
+print('-' * 8 + f' Standard Deviations ' + '-' * 8)
+print(f'F1 score: {np.std(f1s)}')
+print(f'Matthews correlation coefficient: {np.std(mccs)}')
+print(f'ROC AUC score: {np.std(roc_aucs)}')
