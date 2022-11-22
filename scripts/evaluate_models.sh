@@ -1,2 +1,2 @@
-python evaluate.py ravdess > results/ravdess/evaluation.txt
-python evaluate.py speech > results/speech/evaluation.txt
+python evaluate.py ravdess
+python evaluate.py speech

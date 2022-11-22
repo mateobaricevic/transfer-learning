@@ -1,6 +1,9 @@
 import argparse
+import json
+import os
 
 import numpy as np
+from scipy.stats import wilcoxon
 from sklearn.metrics import f1_score, matthews_corrcoef, roc_auc_score
 
 parser = argparse.ArgumentParser()
@@ -51,20 +54,76 @@ for n_fold in range(4):
 
     # Print scores
     print('-' * 8 + f' Model {n_fold} ' + '-' * 8)
-    print(f'F1 score: {f1}')
-    print(f'Matthews correlation coefficient: {mcc}')
-    print(f'ROC AUC score: {roc_auc}')
+    print(f'F1: {round(f1, 4)}')
+    print(f'MCC: {round(mcc, 4)}')
+    print(f'ROC AUC: {round(roc_auc, 4)}')  # type: ignore
+
+# Calculate average scores
+avg_f1s = np.average(f1s)
+avg_mccs = np.average(mccs)
+avg_roc_aucs = np.average(roc_aucs)
 
 # Print average scores
-print()
-print('-' * 8 + f' Average Scores ' + '-' * 8)
-print(f'F1 score: {np.average(f1s)}')
-print(f'Matthews correlation coefficient: {np.average(mccs)}')
-print(f'ROC AUC score: {np.average(roc_aucs)}')
+print('\n' + '-' * 8 + f' Average Scores ' + '-' * 8)
+print(f'F1: {round(avg_f1s, 4)}')
+print(f'MCC: {round(avg_mccs, 4)}')
+print(f'ROC AUC: {round(avg_roc_aucs, 4)}')
+
+# Calculate standard deviations
+std_f1s = np.std(f1s)
+std_mccs = np.std(mccs)
+std_roc_aucs = np.std(roc_aucs)
 
 # Print standard deviations
-print()
-print('-' * 8 + f' Standard Deviations ' + '-' * 8)
-print(f'F1 score: {np.std(f1s)}')
-print(f'Matthews correlation coefficient: {np.std(mccs)}')
-print(f'ROC AUC score: {np.std(roc_aucs)}')
+print('\n' + '-' * 8 + f' Standard Deviations ' + '-' * 8)
+print(f'F1: {round(std_f1s, 4)}')
+print(f'MCC: {round(std_mccs, 4)}')
+print(f'ROC AUC: {round(std_roc_aucs, 4)}')
+
+# Save evaluation
+print('\nSaving evaluations...')
+with open(f'{path}/evaluation.json', 'w') as f:
+    json.dump({
+            'f1s': f1s,
+            'mccs': mccs,
+            'roc_aucs': roc_aucs,
+            'avg_f1s': avg_f1s,
+            'avg_mccs': avg_mccs,
+            'avg_roc_aucs': avg_roc_aucs,
+            'std_f1s': std_f1s,
+            'std_mccs': std_mccs,
+            'std_roc_aucs': std_roc_aucs,
+        }, f, ensure_ascii=False, indent=4)
+print('Done.')
+
+if args.source_dataset:
+    evaluation_path = f'results/{args.target_dataset}/evaluation.json'
+    if not os.path.exists(evaluation_path):
+        print(f'\nEvaluation for {args.target_dataset} is missing!')
+        print(f'Please run "python evaluate.py {args.target_dataset}" first.')
+        exit()
+    
+    with open(evaluation_path, 'r') as evaluation_file:
+        evaluation = json.load(evaluation_file)
+        print(evaluation['f1s'])
+        print(f1s)
+        
+        wilcoxon_f1 = wilcoxon(evaluation['f1s'], f1s).pvalue
+        wilcoxon_mcc = wilcoxon(evaluation['mccs'], mccs).pvalue
+        wilcoxon_roc_auc = wilcoxon(evaluation['roc_aucs'], roc_aucs).pvalue
+        
+        # Print statistical test for each metric
+        print('\n' + '-' * 8 + f' Wilcoxon Signed-Rank Test ' + '-' * 8)
+        print(f'F1: {round(wilcoxon_f1, 4)}')
+        print(f'MCC: {round(wilcoxon_mcc, 4)}')
+        print(f'ROC AUC: {round(wilcoxon_roc_auc, 4)}')
+
+        # Save statistical test
+        print('\nSaving statistical test...')
+        with open(f'{path}/statistical_test.json', 'w') as f:
+            json.dump({
+                    'f1': wilcoxon_f1,
+                    'mcc': wilcoxon_mcc,
+                    'roc_auc': wilcoxon_roc_auc,
+                }, f, ensure_ascii=False, indent=4)
+        print('Done.')
