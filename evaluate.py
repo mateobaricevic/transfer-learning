@@ -105,8 +105,6 @@ if args.source_dataset:
     
     with open(evaluation_path, 'r') as evaluation_file:
         evaluation = json.load(evaluation_file)
-        print(evaluation['f1s'])
-        print(f1s)
         
         wilcoxon_f1 = wilcoxon(evaluation['f1s'], f1s).pvalue
         wilcoxon_mcc = wilcoxon(evaluation['mccs'], mccs).pvalue
