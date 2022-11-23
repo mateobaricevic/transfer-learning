@@ -82,9 +82,10 @@ for n, (train_indexes, test_indexes) in enumerate(rskf.split(X, y)):
             print(pretrained_model.summary())
 
         # Transfer knowledge
-        for j in layers[:args.n_layers]:
-            model.layers[j].set_weights(pretrained_model.layers[j].get_weights())
-            model.layers[j].trainable = False
+        for i in layers[:args.n_layers]:
+            pretrained_weights = pretrained_model.layers[i].get_weights()
+            model.layers[i].set_weights(pretrained_weights)
+            model.layers[i].trainable = False
 
     # Compile model
     model.compile(optimizer=Adam(learning_rate=0.001), loss=categorical_crossentropy, metrics=['accuracy'])
