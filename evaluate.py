@@ -106,11 +106,12 @@ if args.source_dataset:
     with open(evaluation_path, 'r') as evaluation_file:
         evaluation = json.load(evaluation_file)
         
+        # Calculate statistical test for each metric
         wilcoxon_f1 = wilcoxon(evaluation['f1s'], f1s).pvalue
         wilcoxon_mcc = wilcoxon(evaluation['mccs'], mccs).pvalue
         wilcoxon_roc_auc = wilcoxon(evaluation['roc_aucs'], roc_aucs).pvalue
         
-        # Print statistical test for each metric
+        # Print statistical test
         print('\n' + '-' * 8 + f' Wilcoxon Signed-Rank Test ' + '-' * 8)
         print(f'F1: {round(wilcoxon_f1, 4)}')
         print(f'MCC: {round(wilcoxon_mcc, 4)}')
@@ -121,7 +122,19 @@ if args.source_dataset:
         with open(f'{path}/statistical_test.json', 'w') as f:
             json.dump({
                     'f1': wilcoxon_f1,
+                    'f1s': {
+                        'models': evaluation['f1s'],
+                        'tl_models': f1s,
+                    },
                     'mcc': wilcoxon_mcc,
+                    'mccs': {
+                        'models': evaluation['mccs'],
+                        'tl_models': mccs,
+                    },
                     'roc_auc': wilcoxon_roc_auc,
+                    'roc_aucs': {
+                        'models': evaluation['roc_aucs'],
+                        'tl_models': roc_aucs,
+                    },
                 }, f, ensure_ascii=False, indent=4)
         print('Done.')
