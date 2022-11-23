@@ -8,7 +8,7 @@ from keras.callbacks import EarlyStopping
 from keras.losses import categorical_crossentropy
 from keras.models import load_model
 from keras.optimizers import Adam
-from sklearn.model_selection import StratifiedKFold, train_test_split
+from sklearn.model_selection import RepeatedStratifiedKFold, train_test_split
 
 import Models
 
@@ -49,10 +49,10 @@ path = f'results/{args.target_dataset}'
 if args.source_dataset:
     path += f'/{args.source_dataset}/{args.n_layers}_layers'
     
-# Split data into train and test stratified data and use KFold cross-validation
-stratified_k_fold = StratifiedKFold(n_splits=4, shuffle=True, random_state=64)
+# Split data into train and test stratified data and use k-fold cross-validation
+rskf = RepeatedStratifiedKFold(n_splits=4, n_repeats=3, random_state=64)
 
-for n_fold, (train_indexes, test_indexes) in enumerate(stratified_k_fold.split(X, y)):
+for n, (train_indexes, test_indexes) in enumerate(rskf.split(X, y)):
     # Get train and test data
     X_train, X_test = X[train_indexes], X[test_indexes]
     y_train, y_test = y[train_indexes], y[test_indexes]
@@ -70,14 +70,14 @@ for n_fold, (train_indexes, test_indexes) in enumerate(stratified_k_fold.split(X
 
     if args.source_dataset:
         # Load pretrained model
-        print(f'Loading pretrained model_{n_fold} of {args.source_dataset}...')
-        pretrained_model = load_model(f'{path}/model_{n_fold}/model.h5')
+        print(f'Loading pretrained model_{n} of {args.source_dataset}...')
+        pretrained_model = load_model(f'{path}/model_{n}/model.h5')
 
         if pretrained_model is None:
-            raise Exception(f'Pretrained model_{n_fold} of {args.source_dataset} not found!')
+            raise Exception(f'Pretrained model_{n} of {args.source_dataset} not found!')
 
         # Print pretrained model summary
-        if n_fold == 0:
+        if n == 0:
             print('-' * 8 + ' Pretrained model ' + '-' * 8)
             print(pretrained_model.summary())
 
@@ -90,12 +90,12 @@ for n_fold, (train_indexes, test_indexes) in enumerate(stratified_k_fold.split(X
     model.compile(optimizer=Adam(learning_rate=0.001), loss=categorical_crossentropy, metrics=['accuracy'])
 
     # Print model summary
-    if n_fold == 0:
+    if n == 0:
         print('-' * 8 + ' Model ' + '-' * 8)
         print(model.summary())
 
     # Fit model
-    print(f'Fitting model_{n_fold} to {args.target_dataset}...')
+    print(f'Fitting model_{n} to {args.target_dataset}...')
     start_time = datetime.now()
     history = model.fit(
         x=X_train,
@@ -107,16 +107,16 @@ for n_fold, (train_indexes, test_indexes) in enumerate(stratified_k_fold.split(X
     print(f'Training took {datetime.now() - start_time}')
     
     # Make directory if it doesn't exist
-    os.makedirs(f'{path}/model_{n_fold}', exist_ok=True)
+    os.makedirs(f'{path}/model_{n}', exist_ok=True)
 
     # Save training history
     print('Saving training history...')
-    with open(f'{path}/model_{n_fold}/train.history', 'wb') as f:
+    with open(f'{path}/model_{n}/train.history', 'wb') as f:
         pickle.dump(history.history, f)
 
     if args.source_dataset and args.finetune:
         # Finetune model
-        print(f'Finetuning model_{n_fold}...')
+        print(f'Finetuning model_{n}...')
         model.trainable = True
         model.compile(optimizer=Adam(learning_rate=0.0001), loss=categorical_crossentropy, metrics=['accuracy'])
         start_time = datetime.now()
@@ -131,7 +131,7 @@ for n_fold, (train_indexes, test_indexes) in enumerate(stratified_k_fold.split(X
 
         # Save finetuning history
         print('Saving finetuning history...')
-        with open(f'{path}/model_{n_fold}/finetune.history', 'wb') as f:
+        with open(f'{path}/model_{n}/finetune.history', 'wb') as f:
             pickle.dump(history.history, f)
 
     # Predict using test data
@@ -140,10 +140,10 @@ for n_fold, (train_indexes, test_indexes) in enumerate(stratified_k_fold.split(X
 
     # Save model, truths and predictions
     print('Saving model, truths and predictions...')
-    model.save(f'{path}/model_{n_fold}/model.h5')
-    with open(f'{path}/model_{n_fold}/truths.npy', 'wb') as f:
+    model.save(f'{path}/model_{n}/model.h5')
+    with open(f'{path}/model_{n}/truths.npy', 'wb') as f:
         np.save(f, y_test)
-    with open(f'{path}/model_{n_fold}/predictions.npy', 'wb') as f:
+    with open(f'{path}/model_{n}/predictions.npy', 'wb') as f:
         np.save(f, predictions)
 
 print('Done.')
