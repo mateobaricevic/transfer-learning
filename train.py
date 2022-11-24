@@ -71,7 +71,7 @@ for n, (train_indexes, test_indexes) in enumerate(rskf.split(X, y)):
     if args.source_dataset:
         # Load pretrained model
         print(f'Loading pretrained model_{n} of {args.source_dataset}...')
-        pretrained_model = load_model(f'{path}/model_{n}/model.h5')
+        pretrained_model = load_model(f'results/{args.source_dataset}/model_{n}/model.h5')
 
         if pretrained_model is None:
             raise Exception(f'Pretrained model_{n} of {args.source_dataset} not found!')
