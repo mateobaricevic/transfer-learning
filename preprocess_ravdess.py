@@ -7,23 +7,24 @@ classes = ['neutral', 'calm', 'happy', 'sad', 'angry', 'fearful', 'disgust', 'su
 X = []
 y = []
 
+print(f'Preprocessing data from ravdess dataset...')
+
 # Load all audio files and determine the length of the longest recording
 max_len = 0
 for index in range(24):
     actor = f'Actor_{str(index + 1).zfill(2)}'
-    print(f'Processing data from {actor}...')
-    files = os.listdir(f'datasets/ravdess/{actor}/')
+    print(f'\rProcessing data from {actor}...', end='')
+    files = os.listdir(f'datasets/raw/ravdess/{actor}/')
     for f in files:
-        data, samplerate = librosa.load(f'datasets/ravdess/{actor}/{f}', sr=8000)
+        data, samplerate = librosa.load(f'datasets/raw/ravdess/{actor}/{f}', sr=8000)
         X.append(data)
         y.append(int(f[6:8]) - 1)
         max_len = max(len(data), max_len)
-
-print(f'Max waveform length: {max_len}')
+print(f'\nMax waveform length: {max_len}')
 
 # Load background noise and pad all recordings to the length of the longest recording
 print('Padding data with white noise...')
-white_noise, samplerate = librosa.load('datasets/speech/_background_noise_/white_noise.wav', sr=8000)
+white_noise, samplerate = librosa.load('datasets/raw/speech/_background_noise_/white_noise.wav', sr=8000)
 white_noise_i = 0
 for i, x in enumerate(X):
     while len(x) != max_len:
@@ -39,12 +40,13 @@ X = np.array(X)
 y = np.array(y)
 
 # Make directories if they don't exist
-os.makedirs(f'data/ravdess', exist_ok=True)
+path = 'datasets/preprocessed/ravdess'
+os.makedirs(path, exist_ok=True)
     
 # Save data
 print('Saving data...')
-np.save('data/ravdess/classes.npy', classes)
-np.save('data/ravdess/X.npy', X)
-np.save('data/ravdess/y.npy', y)
+np.save(f'{path}/classes.npy', classes)
+np.save(f'{path}/X.npy', X)
+np.save(f'{path}/y.npy', y)
 
 print('Done.')

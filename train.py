@@ -30,9 +30,9 @@ if args.source_dataset:
 
 # Load data
 print('Loading data...')
-classes = np.load(f'data/{args.target_dataset}/classes.npy')
-X = np.load(f'data/{args.target_dataset}/X.npy')
-y = np.load(f'data/{args.target_dataset}/y.npy')
+classes = np.load(f'datasets/preprocessed/{args.target_dataset}/classes.npy')
+X = np.load(f'datasets/preprocessed/{args.target_dataset}/X.npy')
+y = np.load(f'datasets/preprocessed/{args.target_dataset}/y.npy')
 
 # Determine input size
 waveform_length = len(X[0])
@@ -105,7 +105,7 @@ for n, (train_indexes, test_indexes) in enumerate(rskf.split(X, y)):
         epochs=128,
         callbacks=[EarlyStopping(monitor='val_loss', patience=8, restore_best_weights=True)],
     )
-    print(f'Training took {datetime.now() - start_time}')
+    print(f'Training took {datetime.now() - start_time}.')
     
     # Make directory if it doesn't exist
     os.makedirs(f'{path}/model_{n}', exist_ok=True)
@@ -128,7 +128,7 @@ for n, (train_indexes, test_indexes) in enumerate(rskf.split(X, y)):
             epochs=128,
             callbacks=[EarlyStopping(monitor='val_loss', patience=8, restore_best_weights=True)],
         )
-        print(f'Finetuning took {datetime.now() - start_time}')
+        print(f'Finetuning took {datetime.now() - start_time}.')
 
         # Save finetuning history
         print('Saving finetuning history...')
