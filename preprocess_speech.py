@@ -43,22 +43,23 @@ classes = [
 X = []
 y = []
 
+print(f'Preprocessing data from speech dataset...')
+
 # Load all audio files and determine the length of the longest recording
 max_len = 0
 for index, c in enumerate(classes):
-    print(f'Processing data for class {c}...')
-    files = os.listdir(f'datasets/speech/{c}/')
+    print(f'\rProcessing data for class {c}...      ', end='', flush=True)
+    files = os.listdir(f'datasets/raw/speech/{c}/')
     for f in files:
-        data, samplerate = librosa.load(f'datasets/speech/{c}/{f}', sr=8000)
+        data, samplerate = librosa.load(f'datasets/raw/speech/{c}/{f}', sr=8000)
         X.append(data)
         y.append(index)
         max_len = max(len(data), max_len)
-
-print(f'Max waveform length: {max_len}')
+print(f'\nMax waveform length: {max_len}')
 
 # Load background noise and pad all recordings to the length of the longest recording
 print('Padding data with white noise...')
-white_noise, samplerate = librosa.load('datasets/speech/_background_noise_/white_noise.wav', sr=8000)
+white_noise, samplerate = librosa.load('datasets/raw/speech/_background_noise_/white_noise.wav', sr=8000)
 white_noise_i = 0
 for i, x in enumerate(X):
     while len(x) != max_len:
@@ -74,12 +75,13 @@ X = np.array(X)
 y = np.array(y)
 
 # Make directories if they don't exist
-os.makedirs(f'data/speech', exist_ok=True)
+path = 'datasets/preprocessed/speech'
+os.makedirs(path, exist_ok=True)
 
 # Save data
 print('Saving data...')
-np.save('data/speech/classes.npy', classes)
-np.save('data/speech/X.npy', X)
-np.save('data/speech/y.npy', y)
+np.save(f'{path}/classes.npy', classes)
+np.save(f'{path}/X.npy', X)
+np.save(f'{path}/y.npy', y)
 
 print('Done.')

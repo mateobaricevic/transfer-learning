@@ -30,11 +30,11 @@ if args.source_dataset:
 f1s = []
 mccs = []
 roc_aucs = []
-for n_fold in range(4):
+for n in range(12):
     # Load truths and predictions
-    with open(f'{path}/model_{n_fold}/truths.npy', 'rb') as f:
+    with open(f'{path}/model_{n}/truths.npy', 'rb') as f:
         truths = np.load(f)
-    with open(f'{path}/model_{n_fold}/predictions.npy', 'rb') as f:
+    with open(f'{path}/model_{n}/predictions.npy', 'rb') as f:
         predictions = np.load(f)
 
     truths_indexes = [np.argmax(truth) for truth in truths]
@@ -53,7 +53,7 @@ for n_fold in range(4):
     roc_aucs.append(roc_auc)
 
     # Print scores
-    print('-' * 8 + f' Model {n_fold} ' + '-' * 8)
+    print('-' * 8 + f' Model {n} ' + '-' * 8)
     print(f'F1: {round(f1, 4)}')
     print(f'MCC: {round(mcc, 4)}')
     print(f'ROC AUC: {round(roc_auc, 4)}')  # type: ignore
