@@ -1,5 +1,4 @@
 import argparse
-import os
 import pickle
 
 from matplotlib import pyplot as plt
@@ -30,7 +29,7 @@ if args.source_dataset:
 
 # Vizualize models
 print(f'Visualizing {args.target_dataset} models{if_source_dataset}...')
-for i in range(4):
+for i in range(12):
     # Load training history
     with open(f'{path}/model_{i}/train.history', 'rb') as f:
         train_history = pickle.load(f)

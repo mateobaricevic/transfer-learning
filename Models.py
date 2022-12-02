@@ -12,10 +12,10 @@ from keras.layers import (
 from keras.models import Model
 
 
-##############
-#   MagNet   #
-##############
-def magnet(waveform_length, num_classes):
+#################
+#   EmotioNet   #
+#################
+def emotionet(waveform_length, num_classes):
     waveform_input = Input(shape=(waveform_length, 1), name='waveform_input')
 
     e = Conv1D(64, 3, padding='same', name='conv1d')(waveform_input)

@@ -66,7 +66,7 @@ for n, (train_indexes, test_indexes) in enumerate(rskf.split(X, y)):
     y_test = np.eye(num_classes)[y_test]
 
     # Get model
-    model = Models.magnet(waveform_length, num_classes)
+    model = Models.emotionet(waveform_length, num_classes)
 
     if args.source_dataset:
         # Load pretrained model
